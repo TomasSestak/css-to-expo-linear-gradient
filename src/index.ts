@@ -82,7 +82,7 @@ const parseColorStops = (args: Array<string>, firstColorStopIndex: number) => {
                     ? "100%"
                     :  // fallback to evenly spaced color stops
                        // prettier-ignore
-                       `${((i - firstColorStopIndex) / (args.length - firstColorStopIndex - 1)) * 100}%`;
+                    `${((i - firstColorStopIndex) / (args.length - firstColorStopIndex - 1)) * 100}%`;
         colorStops.push({ color, stop });
     }
 
@@ -98,7 +98,7 @@ const parseColorStops = (args: Array<string>, firstColorStopIndex: number) => {
         colors.push(color);
         locations.push(parsePosition(stop));
     });
-    
+
     colors.reverse();
 
     return { colors, locations };
@@ -239,9 +239,9 @@ const transformObsoleteColorStops = (args: Array<string>): string[] => {
     );
 };
 
-/** 
+/**
  * Given a CSS string, returns props for rendering with `expo-linear-gradient`.
- * 
+ *
  * ```tsx
  * fromCSS('linear-gradient(180deg, #ff008450 0%, #fca40040 25%, #ffff0030 40%, #00ff8a20 60%, #00cfff40 75%, #cc4cfa50 100%);')
  * ```
@@ -276,12 +276,23 @@ export function fromCSS(str: string) {
     }
     args.push(buffer.trim());
 
-    return parseGradient(
-        {
-            args,
-            method,
-        },
+    const { colors, locations, start, end } = parseGradient(
+        { args, method },
         { width: 1, height: 1 }
     );
-}
 
+    // ✅ Ensure colors match the required tuple type
+    const validColors = colors as unknown as readonly [string, string, ...string[]];
+
+    // ✅ Ensure locations match the required tuple type
+    const validLocations = locations.length >= 2
+        ? (locations as unknown as readonly [number, number, ...number[]])
+        : null;
+
+    return {
+        colors: validColors,
+        locations: validLocations,
+        startPoint: start,
+        endPoint: end,
+    };
+}
